@@ -4,14 +4,25 @@ const morgan = require('morgan');
 const helmet = require('helmet');
 const fs = require('fs');
 const yup = require('yup');
+const path = require('path');
+const log4js = require('log4js');
 
 
 const app = express();
+var logger = log4js.getLogger();
+logger.level = "debug";
+
+logger.debug("starting service...");
 
 
 app.use(helmet());
-app.use(morgan('short'));
 app.use(cors());
+
+if (app.get('env') == 'production') { 
+    app.use(morgan('common', { skip: function(req, res) { return res.statusCode < 400 }, stream: __dirname + '/../morgan.log' })); 
+} else { 
+    app.use(morgan('dev')); 
+} 
 
 
 app.use(express.json()) //only accept json data
@@ -22,6 +33,7 @@ app.use(express.static('./public'))
 const schema = yup.object().shape({
     name : yup.string().matches(/[\w_]/i) // nombre del modelo contiene palabras y _
 })
+
 
 app.get('/', (req, res) => {
     res.json({
@@ -39,17 +51,20 @@ app.post('/model', async (req, res, next) => {
 
         //search directory tree
 
+        let parts = [];
+
         fromDir('../svg/' + name + '/',/\.svg$/,function(filename){
-            //console.log('-- found: ',filename);
-            res.json({
-                name
-            });
+            //-- found folder name, add all the file info
+            parts.push(filename);
+            logger.debug("filename found : "+filename);
+
         });
 
+        res.json({
+            name,
+            parts
+        });
 
-        // res.json({
-        //     name
-        // });
     } catch (error) {
         next(error);
     }

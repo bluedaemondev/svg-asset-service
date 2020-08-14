@@ -17,6 +17,8 @@ app.use(cors());
 app.use(express.json()) //only accept json data
 app.use(express.static('./public'))
 
+// modelos utilizados. podemos agregar mas propiedades con restricciones, 
+// u otros datos que hagan falta
 const schema = yup.object().shape({
     name : yup.string().matches(/[\w_]/i) // nombre del modelo contiene palabras y _
 })
@@ -35,9 +37,19 @@ app.post('/model', async (req, res, next) => {
             name = "";
         }
 
-        res.json({
-            name
+        //search directory tree
+
+        fromDir('../svg/' + name + '/',/\.svg$/,function(filename){
+            //console.log('-- found: ',filename);
+            res.json({
+                name
+            });
         });
+
+
+        // res.json({
+        //     name
+        // });
     } catch (error) {
         next(error);
     }
@@ -56,6 +68,26 @@ app.use((error, req, res, next) => {
     });
 
 })
+
+function fromDir(startPath,filter,callback){
+
+    //console.log('Starting from dir '+startPath+'/');
+
+    if (!fs.existsSync(startPath)){
+        console.log("no dir ",startPath);
+        return;
+    }
+
+    var files=fs.readdirSync(startPath);
+    for(var i=0;i<files.length;i++){
+        var filename=path.join(startPath,files[i]);
+        var stat = fs.lstatSync(filename);
+        if (stat.isDirectory()){
+            fromDir(filename,filter,callback); //recurse
+        }
+        else if (filter.test(filename)) callback(filename);
+    };
+};
 
 
 

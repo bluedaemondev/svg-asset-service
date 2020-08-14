@@ -32,7 +32,7 @@ app.post('/model', async (req, res, next) => {
     try{
         await schema.validate({name})
         if(!name){
-            return -1;
+            name = "";
         }
 
         res.json({
@@ -44,7 +44,6 @@ app.post('/model', async (req, res, next) => {
 });
 
 app.use((error, req, res, next) => {
-    
     if(error.status){
         res.status(error.status);
     }

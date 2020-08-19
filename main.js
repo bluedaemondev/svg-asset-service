@@ -14,7 +14,6 @@ logger.level = "debug";
 
 logger.debug("starting service...");
 
-
 app.use(helmet());
 app.use(cors());
 
@@ -31,32 +30,36 @@ app.use(express.static('./public'))
 // modelos utilizados. podemos agregar mas propiedades con restricciones, 
 // u otros datos que hagan falta
 const schema = yup.object().shape({
-    name : yup.string().matches(/[\w_]/i) // nombre del modelo contiene palabras y _
+    name : yup.string().matches(/[\w_]/i), // nombre del modelo contiene palabras y _
+    root_search: yup.string().optional()
 })
 
 
 app.get('/', (req, res) => {
     res.json({
-        message: 'asxp CC - Club College svg retrieving service.'
+        message: 'asxp CC - Club College svg models retrieving service.'
     })
 });
 
 app.post('/model', async (req, res, next) => {
-    const { name } = req.body;
+    const { root_search, name } = req.body;
     try{
-        await schema.validate({name})
+        await schema.validate({root_search,name})
         if(!name){
             name = "";
         }
+        // if(!root_search || root_search === ""){
+        //     root_search = "../svg/";
+        // }
 
         //search directory tree
 
         let parts = [];
 
-        fromDir('../svg/' + name + '/',/\.svg$/,function(filename){
+        fromDir(root_search != ""? root_search : "../svg/" + name + '/',/\.svg$/,function(filename){
             //-- found folder name, add all the file info
-            parts.push(filename);
-            logger.debug("filename found : "+filename);
+            parts.push(filename.replace(/\\/g,'/'));
+            logger.debug("filename found : "+filename.replace(/\\/g,'/'));
 
         });
 
@@ -108,7 +111,7 @@ function fromDir(startPath,filter,callback){
 
 const port = process.env.PORT || 1337
 app.listen(port, () => {
-    console.log(`Listening at http://localhost:${port}`);
+    logger.debug(`Listening at http://localhost:${port}`);
 
 })
 

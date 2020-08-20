@@ -58,8 +58,10 @@ app.post('/model', async (req, res, next) => {
 
         fromDir(root_search != ""? root_search : "../svg/" + name + '/',/\.svg$/,function(filename){
             //-- found folder name, add all the file info
-            parts.push(filename.replace(/\\/g,'/'));
-            logger.debug("filename found : "+filename.replace(/\\/g,'/'));
+            let retval = filename.replace(/\\/g,'/');
+            // retval = retval.split('..')[1];
+            parts.push(retval);
+            logger.debug("filename found : "+ retval);
 
         });
 
